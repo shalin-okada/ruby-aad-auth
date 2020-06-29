@@ -19,7 +19,7 @@ module AadAuth
       timestamp = Time.now.to_i
 
       unless claims[0]["exp"] > timestamp
-        return UnauthorizedException.new("The token has expired.")
+        raise UnauthorizedException.new("The token has expired.")
       end
       
       unless claims[0]["aud"] === appId
