@@ -6,7 +6,7 @@ require "jwt"
 module AadAuth
   class Aad
     def self.auth(token)
-      keys = get_jwks
+      keys = get_jwt_keys
       jwk_loader = ->(options) do
         @cached_keys = nil if options[:invalidate]
         @cached_keys ||= keys
@@ -28,7 +28,7 @@ module AadAuth
 
     private
 
-    def get_jwks
+    def get_jwt_keys
       keysUri = "https://login.microsoftonline.com/#{ENV["TENANT_ID"]}/discovery/v2.0/keys?appid=#{ENV["APP_ID"]}"
       response = Net::HTTP.get_response(URI.parse(keysUri))
       keys = JSON.parse(response.body, symbolize_names: true)
