@@ -1,9 +1,24 @@
 RSpec.describe AadAuth do
-  it "has a version number" do
-    expect(AadAuth::VERSION).not_to be nil
-  end
+  describe 'validation' do
+    context 'ENV["APP_ID"] is null' do
+      
+    end
 
-  it "does something useful" do
-    expect(false).to eq(true)
+    context 'ENV["TENANT_ID"] is null' do
+      
+    end
+
+    context 'Old token.' do
+      
+    end
+
+    context 'Different application token.' do
+      
+    end
+
+    context "Different tenant token." do
+      
+    end
+    
   end
 end
