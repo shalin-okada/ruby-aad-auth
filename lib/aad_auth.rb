@@ -4,8 +4,8 @@ require "json"
 require "jwt"
 
 module AadAuth
-  def self.auth(tenantId, appId, token)
-    keysUri = "https://login.microsoftonline.com/#{tenantId}/discovery/v2.0/keys?appid=#{appId}"
+  def self.auth(token)
+    keysUri = "https://login.microsoftonline.com/#{ENV["TENANT_ID"]}/discovery/v2.0/keys?appid=#{ENV["APP_ID"]}"
     response = Net::HTTP.get_response(URI.parse(keysUri))
     keys = JSON.parse(response.body, symbolize_names: true)
 
