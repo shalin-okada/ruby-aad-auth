@@ -36,11 +36,11 @@ module AadAuth
     end
     
     def validate_exp(exp)
-      raise UnauthorizedException.new("The token has expired.") unless claims[0]["exp"] > Time.now.to_i
+      raise UnauthorizedException.new("The token has expired.") unless exp > Time.now.to_i
     end
 
     def validate_aud(aud)
-      raise UnauthorizedException.new("AppID dosen't match with the token aud.") unless claims[0]["aud"] === ENV["APP_ID"]
+      raise UnauthorizedException.new("AppID dosen't match with the token aud.") unless aud === ENV["APP_ID"]
     end
 
   end
