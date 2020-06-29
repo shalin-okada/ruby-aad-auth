@@ -4,30 +4,44 @@ require "json"
 require "jwt"
 
 module AadAuth
-  def self.auth(token)
-    keysUri = "https://login.microsoftonline.com/#{ENV["TENANT_ID"]}/discovery/v2.0/keys?appid=#{ENV["APP_ID"]}"
-    response = Net::HTTP.get_response(URI.parse(keysUri))
-    keys = JSON.parse(response.body, symbolize_names: true)
+  class Aad
+    def self.auth(token)
+      keys = get_jwks
+      jwk_loader = ->(options) do
+        @cached_keys = nil if options[:invalidate]
+        @cached_keys ||= keys
+      end
 
-    jwk_loader = ->(options) do
-      @cached_keys = nil if options[:invalidate]
-      @cached_keys ||= keys
-    end
+      begin
+        claims = JWT.decode(token, nil, true, { algorithm: 'RS256', jwks: jwk_loader })
 
-    begin
-      claims = JWT.decode(token, nil, true, { algorithm: 'RS256', jwks: jwk_loader })
-      timestamp = Time.now.to_i
+        validate_exp(claims[0]["exp"])
 
-      unless claims[0]["exp"] > timestamp
-        raise UnauthorizedException.new("The token has expired.")
+        validate_aud(claims[0]["aud"])
+
+      rescue => e
+        return JSON.generate({"success":false, "message":e.message})
       end
       
-      unless claims[0]["aud"] === appId
-        raise UnauthorizedException.new("AppID dosen't match with the token aud.")
-      end
-    rescue => e
-      return JSON.generate({"success":false, "message":e.message})
+      return JSON.generate({"success":true, "message":"Succecc to auth."})
     end
-    return JSON.generate({"success":true, "message":"Succecc to auth."})
+
+    private
+
+    def get_jwks
+      keysUri = "https://login.microsoftonline.com/#{ENV["TENANT_ID"]}/discovery/v2.0/keys?appid=#{ENV["APP_ID"]}"
+      response = Net::HTTP.get_response(URI.parse(keysUri))
+      keys = JSON.parse(response.body, symbolize_names: true)
+      return keys
+    end
+    
+    def validate_exp(exp)
+      raise UnauthorizedException.new("The token has expired.") unless claims[0]["exp"] > Time.now.to_i
+    end
+
+    def validate_aud(aud)
+      raise UnauthorizedException.new("AppID dosen't match with the token aud.") unless claims[0]["aud"] === ENV["APP_ID"]
+    end
+
   end
 end
