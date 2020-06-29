@@ -23,7 +23,7 @@ module AadAuth
         return JSON.generate({"success":false, "message":e.message})
       end
       
-      return JSON.generate({"success":true, "message":"Succecc to auth."})
+      return JSON.generate({"success":true, "message":"Succeed to auth."})
     end
 
     private
