@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["shalinokada@gmail.com"]
 
   spec.summary       = %q{A gem which help to auth to AAD(Azure Active Directory).}
-  spec.description   = %q{A gem which help to auth to AAD(Azure Active Directory).}
+  spec.description   = %q{A gem which help to auth to AAD.}
   spec.homepage      = "https://github.com/shalin-okada/ruby-aad-auth"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
