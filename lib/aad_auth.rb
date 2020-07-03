@@ -5,43 +5,42 @@ require "jwt"
 
 module AadAuth
   class Aad
-    def self.auth(token)
-      keys = get_jwt_keys
+    def auth!(token)
+      keys = self.get_jwk_set()
       jwk_loader = ->(options) do
         @cached_keys = nil if options[:invalidate]
         @cached_keys ||= keys
       end
 
-      begin
-        claims = JWT.decode(token, nil, true, { algorithm: 'RS256', jwks: jwk_loader })
-
-        validate_exp(claims[0]["exp"])
-
-        validate_aud(claims[0]["aud"])
-
-      rescue => e
-        return JSON.generate({"success":false, "message":e.message})
-      end
-      
-      return JSON.generate({"success":true, "message":"Succeed to auth."})
+      claims = JWT.decode(token, nil, true, { algorithm: 'RS256', jwks: jwk_loader })
+      self.validate_exp(claims[0]["exp"])
+      self.validate_aud(claims[0]["aud"])
     end
 
     private
-
-    def get_jwt_keys
+    def get_jwk_set()
       keysUri = "https://login.microsoftonline.com/#{ENV["TENANT_ID"]}/discovery/v2.0/keys?appid=#{ENV["APP_ID"]}"
       response = Net::HTTP.get_response(URI.parse(keysUri))
-      keys = JSON.parse(response.body, symbolize_names: true)
-      return keys
+      if response.code != 200
+        raise UnauthorizedError.new("Fail to get JWK Set from Microsoft.")
+      else
+        keys = JSON.parse(response.body, symbolize_names: true)
+      end
     end
-    
+
     def validate_exp(exp)
-      raise UnauthorizedException.new("The token has expired.") unless exp > Time.now.to_i
+      raise UnauthorizedError.new("The token has expired.") unless exp > Time.now.to_i
     end
 
     def validate_aud(aud)
-      raise UnauthorizedException.new("AppID dosen't match with the token aud.") unless aud === ENV["APP_ID"]
+      raise UnauthorizedError.new("AppID dosen't match with the token aud.") unless aud === ENV["APP_ID"]
     end
-
   end
+
+  class UnauthorizedError < StandardError
+    def initialize(msg="Unauthorized")
+      super
+    end
+  end
+
 end
